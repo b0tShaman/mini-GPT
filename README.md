@@ -19,11 +19,15 @@ This project demonstrates how to train a Large Language Model (LLM) on consumer 
 
 It is recommended to use a virtual environment to manage dependencies.
 
+### ⚠️ Prerequisite: Python Version
+**Important:** To use NVIDIA GPU acceleration on Windows, you must use **Python 3.10, 3.11, or 3.12**. 
+* *Python 3.13 is currently **not** supported by PyTorch GPU binaries.*
+* *Ensure you have the **64-bit** version of Python installed.*
+
 ### 1. Clone the Repository
 ```bash
 git clone [https://github.com/yourusername/mini-gpt.git](https://github.com/yourusername/mini-gpt.git)
 cd mini-gpt
-
 ```
 ### 2. Create a Virtual Environment
 
@@ -35,12 +39,19 @@ source venv/bin/activate
 
 **On Windows(cmd):**
 ```bash
-python -m venv venv
+# Ensure you are using Python 3.11 or 3.12
+py -3.11 -m venv venv
 venv\Scripts\activate
 ```
 
 ### 3. Install Dependencies
+
+**For NVIDIA GPU (Windows):**
+You must install the specific CUDA-enabled version of PyTorch before other dependencies. Run this command:
+
 ```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# Install Remaining Libraries
 pip install -r requirements.txt
 ```
 
