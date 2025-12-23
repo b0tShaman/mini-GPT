@@ -23,11 +23,12 @@ if torch.backends.mps.is_available():
     print("✅ Using Mac GPU (MPS acceleration)")
 elif torch.cuda.is_available():
     device = torch.device("cuda")
+    print(f"✅ Using NVIDIA GPU: {torch.cuda.get_device_name(0)}")
 else:
     device = torch.device("cpu")
     print("⚠️ Using CPU")
 
-CHECKPOINT_FILE = "model.pth"
+CHECKPOINT_FILE = "weights.pth"
 TOKENIZER_FILE = "tokenizer.json"
 
 # ---------------------------------------------------------

@@ -1,0 +1,19 @@
+# Python Virtual Env
+venv/
+env/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Dataset & Models (Too large for GitHub)
+dataset.bin
+dataset.csv
+weights.pth
+tokenizer.json
+input.txt
+cleaned_data.txt
+dataset_preview.csv
+
+# OS Files
+.DS_Store
