@@ -1,4 +1,4 @@
-# Mini-GPT: PyTorch Implementation with Lazy Loading
+# Mini-GPT: PyTorch Implementation
 
 A lightweight, educational implementation of a GPT-style autoregressive language model (Decoder-only Transformer) in PyTorch. 
 
