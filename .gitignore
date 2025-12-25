@@ -7,13 +7,14 @@ __pycache__/
 *.pyc
 
 # Dataset & Models (Too large for GitHub)
-dataset.bin
-dataset.csv
-weights.pth
-tokenizer.json
-input.txt
-cleaned_data.txt
+assets/dataset.bin
+assets/dataset.csv
+assets/weights.pth
+assets/tokenizer.json
+assets/input.txt
+assets/cleaned_data.txt
 dataset_preview.csv
+runs/
 
 # OS Files
 .DS_Store
