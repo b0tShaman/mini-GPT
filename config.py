@@ -1,22 +1,28 @@
 import os
 
 # Flags
-INSTRUCTION_SET = True 
-CHAT_MODE = False
+INSTRUCTION_SET = True  # Whether data uses instruction format
+CHAT_MODE = False  # Whether to run in chat mode
 
 # Hyperparameters
-CONTEXT_LEN = 64      
-EMBED_DIM = 64        
-NUM_LAYERS = 12        
-NUM_HEADS = 4         
-BATCH_SIZE = 128 
+CONTEXT_LEN = 64
+EMBED_DIM = 64
+NUM_LAYERS = 12
+NUM_HEADS = 4
+BATCH_SIZE = 128
 EPOCHS = 3
-LR = 3e-4              
+LR = 3e-4
 VAL_SPLIT = 0.1
 
-# Data Parameters 
-MAX_VOCAB_SIZE = 3000   # Max tokens BPE should create
-STEP_SIZE = 16          # Sliding window step (smaller = more data)
+# Inference Parameters
+MAX_NEW_TOKENS = 100  # Max tokens to generate in one go
+NUM_SENTENCES = 5  # Sentences to generate in typewriter mode
+TOP_K = 3  # Top-K sampling
+TEMPERATURE = 0.6  # Sampling temperature
+
+# Data Parameters
+MAX_VOCAB_SIZE = 3000  # Max tokens BPE should create
+STEP_SIZE = 16  # Sliding window step (smaller = more data)
 
 # File Paths
 CHECKPOINT_FILE = "assets/weights.pth"
@@ -32,6 +38,6 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # --- AUTO-CREATE FOLDER ---
 # This ensures the script doesn't crash on the first run
-assets_dir = os.path.dirname(CHECKPOINT_FILE) # Gets "assets"
+assets_dir = os.path.dirname(CHECKPOINT_FILE)  # Gets "assets"
 os.makedirs(assets_dir, exist_ok=True)
 # --------------------------
