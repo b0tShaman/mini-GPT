@@ -33,7 +33,7 @@ It is recommended to use a virtual environment to manage dependencies.
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/yourusername/mini-gpt.git](https://github.com/yourusername/mini-gpt.git)
+git clone https://github.com/yourusername/mini-gpt.git
 cd mini-gpt
 ```
 ### 2. Create a Virtual Environment
