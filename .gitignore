@@ -7,13 +7,7 @@ __pycache__/
 *.pyc
 
 # Dataset & Models (Too large for GitHub)
-assets/dataset.bin
-assets/dataset.csv
-assets/weights.pth
-assets/tokenizer.json
-assets/input.txt
-assets/cleaned_data.txt
-dataset_preview.csv
+outputs/
 runs/
 
 # OS Files

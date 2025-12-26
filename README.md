@@ -59,7 +59,7 @@ You must install the specific CUDA-enabled version of PyTorch before other depen
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 # Install Remaining Libraries
-pip install -r requirements.txt
+pip install -r assets/requirements.txt
 ```
 
 ## 🏃 Usage

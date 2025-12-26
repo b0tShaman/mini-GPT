@@ -24,20 +24,21 @@ TEMPERATURE = 0.6  # Sampling temperature
 MAX_VOCAB_SIZE = 3000  # Max tokens BPE should create
 STEP_SIZE = 16  # Sliding window step (smaller = more data)
 
-# File Paths
-CHECKPOINT_FILE = "assets/weights.pth"
-TOKENIZER_FILE = "assets/tokenizer.json"
-DATA_FILE = "input.txt"  # Your source text file
-BIN_FILE = "assets/dataset.bin"
-CLEAN_FILE = "assets/cleaned_data.txt"
-PREVIEW_FILE = "assets/dataset_preview.csv"
-SLIDING_WINDOW_PREVIEW_FILE = "assets/dataset.csv"
+# Your source text file
+DATA_FILE = "input.txt" 
 
-# Environment
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+# 1. Model Artifacts
+CHECKPOINT_FILE = "outputs/model/weights.pth"
+TOKENIZER_FILE = "outputs/model/tokenizer.json"
 
-# --- AUTO-CREATE FOLDER ---
-# This ensures the script doesn't crash on the first run
-assets_dir = os.path.dirname(CHECKPOINT_FILE)  # Gets "assets"
-os.makedirs(assets_dir, exist_ok=True)
-# --------------------------
+# 2. Data Cache Files
+BIN_FILE = "outputs/data/dataset.bin"
+CLEAN_FILE = "outputs/data/cleaned_data.txt"
+PREVIEW_FILE = "outputs/data/dataset_preview.csv"
+SLIDING_WINDOW_PREVIEW_FILE = "outputs/data/dataset.csv"
+
+# --- AUTO-CREATE FOLDERS ---
+# We now need to ensure BOTH sub-folders exist to prevent crashes
+os.makedirs(os.path.dirname(CHECKPOINT_FILE), exist_ok=True) # Creates outputs/model
+os.makedirs(os.path.dirname(BIN_FILE), exist_ok=True)        # Creates outputs/data
+# ---------------------------
