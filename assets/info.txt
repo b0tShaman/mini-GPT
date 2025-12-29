@@ -1,0 +1,111 @@
+Test data-
+<user>: Hi there!
+<bot>: Hi there!
+<user>: What's up?
+<bot>: Not much. I'm just hanging out at home.
+<user>: Me too! I'm just watching some TV.
+<bot>: Oh, what are you watching?
+<user>: I'm watching a rap music video.
+<bot>: Oh, cool! I love rap music.
+<user>: Me too! Who's your favorite rapper?
+<bot>: I like Drake and Kendrick Lamar.
+<user>: Oh, cool! I like them too.
+<bot>: What do you like about rap music?
+<user>: I like the beat and the lyrics. They're so creative and expressive.
+<bot>: Me too! I love how rap music can be so different and diverse.
+<user>: Yeah, it's really cool.
+<bot>: So, what are you studying in college?
+<user>: I'm studying education. I want to be a teacher.
+<bot>: Oh, cool! That's a great field.
+<user>: Thanks! I think so too.
+<bot>: So, what do you like to do for fun?
+<user>: I love to play sports, hang out with my friends, and listen to music.
+<bot>: Oh, that sounds like fun! I like to do similar things.
+<user>: Well, it was nice chatting with you. I have to go now.
+<bot>: It was nice talking to you too. Have a great day!
+<user>: You too!
+
+(.venv) vvp@VONFJCP64GJ3K mini-GPT % python3 main.py                                         
+✅ Using Mac GPU (MPS acceleration)
+--- Model Configuration ---
+INSTRUCTION_SET = True
+CHAT_MODE = True
+CONTEXT_LEN = 128
+EMBED_DIM = 128
+NUM_LAYERS = 4
+NUM_HEADS = 4
+BATCH_SIZE = 128
+EPOCHS = 1
+LR = 0.0003
+VAL_SPLIT = 0.1
+MAX_NEW_TOKENS = 100
+NUM_SENTENCES = 5
+TOP_K = 1
+TEMPERATURE = 0.6
+MAX_VOCAB_SIZE = 3000
+STEP_SIZE = 1
+---------------------------
+📖 Streaming input.txt...
+🏗️  Initializing BPE Tokenizer...
+🏋️  Training tokenizer on input.txt...
+[00:00:01] Pre-processing files (28 Mo)   ██████████████████████████████████████████████████████████████████████████████                100%
+[00:00:00] Tokenize words                 ██████████████████████████████████████████████████████████████████████████████ 20090    /    20090
+[00:00:00] Count pairs                    ██████████████████████████████████████████████████████████████████████████████ 20090    /    20090
+[00:00:00] Compute merges                 ██████████████████████████████████████████████████████████████████████████████ 2859     /     2859
+   ✅ BPE Training Complete. Vocab Size: 3000
+💾 Streaming to 'outputs/data/cleaned_data.txt' and 'outputs/data/dataset.bin'...
+   Total Tokens: 8219823
+🔗 creating memory map to outputs/data/dataset.bin...
+📊 Generating token preview to 'outputs/data/dataset_preview.csv' (First 100 tokens)...
+   ✅ Preview saved.
+📊 Generating sliding window preview to 'outputs/data/dataset.csv' (First 100 samples)...
+   ✅ Preview saved.
+🏗️  Building new model: Layers=4, Heads=4, Embed=128, Context=128
+
+🚀 Logging to TensorBoard. Run: tensorboard --logdir=runs
+
+🚀 Starting Training on mps at 2025-12-29 10:50:04
+   Train Windows: 7397711 | Val Windows: 821854
+12:04:55 | Epoch 1 | Tr Loss: 1.7606 | Val Loss: 1.2347 | Tr PPL: 5.82 | Val PPL: 3.44 | Val Acc: 70.1% | Time: 1h 14m 51.47s
+
+✅ Training Complete!
+
+💾 Saving model to outputs/model/weights.pth...
+   ✅ Model & Tokenizer saved.
+
+💬 Entering Chat Mode... (Type 'reset' to clear history, 'q' to quit)
+📝 You: Hi there!
+🤖:  hello! 
+
+📝 You: What's up?
+🤖:  not much, just hanging out. how about you? 
+
+📝 You: Me too! I'm just watching some TV.
+🤖:  oh, that sounds fun! i love tv shows. 
+
+📝 You: I'm watching a rap music video.
+🤖:  me too! i love watching the music videos. 
+
+📝 You: Me too! Who's your favorite rapper?
+🤖:  i love the beatles! they're so good! 
+
+📝 You: Oh, cool! I like them too.
+🤖:  me too! they're one of my favorite bands. 
+
+📝 You: I like the beat and the lyrics. They're so creative and expressive.
+🤖:  i agree! they're definitely one of my favorite bands of all time. 
+
+📝 You: Yeah, it's really cool.
+🤖:  i'm glad you like them! i'm always looking for new music to listen to. 
+
+📝 You: I'm studying education. I want to be a teacher.
+🤖:  that's awesome! i'm sure you'll be a great teacher. 
+
+📝 You: Thanks! I think so too.
+🤖:  i'm sure you will! you seem like a really nice person. 
+
+📝 You: I love to play sports, hang out with my friends, and listen to music.
+🤖:  that sounds like a lot of fun! i'm glad you have a good time. 
+
+📝 You:  Well, it was nice chatting with you. I have to go now.
+🤖:  it was nice talking to you too! have a nice day! 

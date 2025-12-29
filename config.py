@@ -2,15 +2,16 @@ import os
 
 # Flags
 INSTRUCTION_SET = True  # Whether data uses instruction format
-CHAT_MODE = False  # Whether to run in chat mode
+CHAT_MODE = True  # Whether to run in chat mode
 
 # Hyperparameters
-CONTEXT_LEN = 64
-EMBED_DIM = 64
-NUM_LAYERS = 12
+CONTEXT_LEN = 128
+EMBED_DIM = 128
+NUM_LAYERS = 4
 NUM_HEADS = 4
 BATCH_SIZE = 128
-EPOCHS = 3
+DROPOUT = 0.1
+EPOCHS = 1
 LR = 3e-4
 VAL_SPLIT = 0.1
 
@@ -22,10 +23,10 @@ TEMPERATURE = 0.6  # Sampling temperature
 
 # Data Parameters
 MAX_VOCAB_SIZE = 3000  # Max tokens BPE should create
-STEP_SIZE = 16  # Sliding window step (smaller = more data)
+STEP_SIZE = 1  # Sliding window step (smaller = more data)
 
 # Your source text file
-DATA_FILE = "input.txt" 
+DATA_FILE = "input.txt"
 
 # 1. Model Artifacts
 CHECKPOINT_FILE = "outputs/model/weights.pth"
@@ -39,6 +40,6 @@ SLIDING_WINDOW_PREVIEW_FILE = "outputs/data/dataset.csv"
 
 # --- AUTO-CREATE FOLDERS ---
 # We now need to ensure BOTH sub-folders exist to prevent crashes
-os.makedirs(os.path.dirname(CHECKPOINT_FILE), exist_ok=True) # Creates outputs/model
-os.makedirs(os.path.dirname(BIN_FILE), exist_ok=True)        # Creates outputs/data
+os.makedirs(os.path.dirname(CHECKPOINT_FILE), exist_ok=True)  # Creates outputs/model
+os.makedirs(os.path.dirname(BIN_FILE), exist_ok=True)  # Creates outputs/data
 # ---------------------------

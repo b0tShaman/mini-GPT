@@ -1,19 +1,21 @@
 import torch
 import torch.nn as nn
+import config
 
 
 class TransformerBlock(nn.Module):
     def __init__(self, embed_dim, num_heads, context_len):
         super(TransformerBlock, self).__init__()
-        self.attention = nn.MultiheadAttention(embed_dim, num_heads, batch_first=True)
+        self.attention = nn.MultiheadAttention(embed_dim, num_heads, batch_first=True, dropout=config.DROPOUT)
         self.ln1 = nn.LayerNorm(embed_dim)
         self.ln2 = nn.LayerNorm(embed_dim)
         self.feed_forward = nn.Sequential(
             nn.Linear(embed_dim, embed_dim * 4),
             nn.GELU(),
+            nn.Dropout(config.DROPOUT), # feedforward dropout
             nn.Linear(embed_dim * 4, embed_dim),
         )
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout(config.DROPOUT)
         # Register buffer for causal mask
         self.register_buffer(
             "causal_mask",

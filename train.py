@@ -7,7 +7,7 @@ import signal
 import math
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 
 # Local imports
 import config
@@ -15,6 +15,8 @@ from utils import DEVICE, save_checkpoint, load_checkpoint
 from model import TextGenModel
 from data import TextProcessor, LazyWindowDataset
 from inference import generate_text_string
+
+torch.backends.cudnn.benchmark = True
 
 
 def train_model():
@@ -61,15 +63,33 @@ def train_model():
         print(f"Please ensure {config.DATA_FILE} exists.")
         return None, None
 
-    full_dataset = LazyWindowDataset(
-        data_ids, config.CONTEXT_LEN, step_size=config.STEP_SIZE
-    )
-    val_size = int(len(full_dataset) * config.VAL_SPLIT)
-    train_size = len(full_dataset) - val_size
-    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+    # Split raw IDs first to prevent sliding-window leakage
+    split_idx = int(len(data_ids) * (1 - config.VAL_SPLIT))
+    train_ids = data_ids[:split_idx]
+    val_ids = data_ids[split_idx:]
 
-    train_loader = DataLoader(train_dataset, batch_size=config.BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=config.BATCH_SIZE, shuffle=False)
+    # Create separate datasets from the distinct ID chunks
+    train_dataset = LazyWindowDataset(
+        train_ids, config.CONTEXT_LEN, step_size=config.STEP_SIZE
+    )
+    val_dataset = LazyWindowDataset(
+        val_ids, config.CONTEXT_LEN, step_size=config.STEP_SIZE
+    )
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=config.BATCH_SIZE,
+        shuffle=True,
+        # num_workers=2,
+        # pin_memory=True,
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=config.BATCH_SIZE,
+        shuffle=False,
+        # num_workers=2,
+        # pin_memory=True,
+    )
 
     # 3. Model Init
     if model is None:
@@ -86,15 +106,7 @@ def train_model():
     else:
         model.to(DEVICE)
 
-    # 4. Safety Save
-    def safety_save(sig, frame):
-        print("\n\n🛑 Interrupt! Saving model before exiting...")
-        save_checkpoint(model, processor, config.CHECKPOINT_FILE)
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, safety_save)
-
-    # 5. Optimizer & Logging
+    # 4. Setup Logging & Optimization
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=config.LR, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.EPOCHS)
@@ -102,6 +114,74 @@ def train_model():
     log_dir = f"runs/experiment_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     writer = SummaryWriter(log_dir=log_dir)
     print(f"\n🚀 Logging to TensorBoard. Run: tensorboard --logdir=runs")
+
+    # ---------------------------------------------------------
+    # Helper: Ensure we log HParams even if we quit early
+    # ---------------------------------------------------------
+    def finalize_logging(final_loss=0.0, final_acc=0.0, final_ppl=0.0):
+        # 1. Define HParams (Inputs)
+        hparam_dict = {
+            "lr": config.LR,
+            "batch_size": config.BATCH_SIZE,
+            "embed_dim": embed_dim,
+            "num_layers": num_layers,
+            "num_heads": num_heads,
+            "dropout": config.DROPOUT,
+            "context_len": config.CONTEXT_LEN,
+            "vocab_size": processor.vocab_size,
+        }
+        
+        # 2. Define Metrics (Outputs)
+        metric_dict = {
+            "hparam/loss": final_loss,
+            "hparam/accuracy": final_acc,
+            "hparam/perplexity": final_ppl,
+        }
+        
+        # 3. Write to TensorBoard
+        writer.add_hparams(hparam_dict, metric_dict)
+        writer.flush()
+        writer.close()
+        print(f"📊 TensorBoard HParams & Metrics successfully logged.")
+
+    # ---------------------------------------------------------
+    # Safety Save (Updated to include Logging)
+    # ---------------------------------------------------------
+    def safety_save(sig, frame):
+        print("\n\n🛑 Interrupt! Saving model & logs before exiting...")
+        
+        # Try to capture current metrics if they exist in local scope
+        curr_loss = avg_val_loss if 'avg_val_loss' in locals() else 0.0
+        curr_acc = val_acc if 'val_acc' in locals() else 0.0
+        curr_ppl = val_ppl if 'val_ppl' in locals() else 0.0
+        
+        finalize_logging(curr_loss, curr_acc, curr_ppl)
+        save_checkpoint(model, processor, config.CHECKPOINT_FILE)
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, safety_save)
+
+    # ---------------------------------------------------------
+    # 1. Cleaner Config Summary (Bullet Points)
+    # ---------------------------------------------------------
+    config_summary = f"""
+    ### ⚙️ Configuration
+    
+    #### 🏗️ Model Architecture
+    Context Len: {config.CONTEXT_LEN}
+    Embed Dim: {embed_dim}
+    Layers: {num_layers}
+    Heads: {num_heads}
+    Vocab Size: {processor.vocab_size}
+
+    #### 🏋️ Training Setup
+    Batch Size: {config.BATCH_SIZE}
+    Learning Rate: {config.LR}
+    Dropout: {config.DROPOUT}
+    Epochs: {config.EPOCHS}
+    Device: {DEVICE}
+    """
+    writer.add_text("Metadata/Config", config_summary, 0)
 
     print(
         f"\n🚀 Starting Training on {DEVICE} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -111,7 +191,7 @@ def train_model():
 
     global_step = 0
 
-    # Get a dummy input batch
+    # Get a dummy input batch for Graph
     dummy_input, _ = next(iter(train_loader))
     dummy_input = dummy_input.to(DEVICE)
     writer.add_graph(model, dummy_input)
@@ -220,6 +300,14 @@ def train_model():
         scheduler.step()
 
     print("\n✅ Training Complete!")
-    writer.close()
+    
+    # 4. Final Logging of HParams
+    # Ensure metrics exist even if loop didn't run properly
+    final_val_loss = avg_val_loss if 'avg_val_loss' in locals() else 0.0
+    final_val_acc = val_acc if 'val_acc' in locals() else 0.0
+    final_val_ppl = val_ppl if 'val_ppl' in locals() else 0.0
+
+    finalize_logging(final_val_loss, final_val_acc, final_val_ppl)
+    
     save_checkpoint(model, processor, config.CHECKPOINT_FILE)
     return model, processor
