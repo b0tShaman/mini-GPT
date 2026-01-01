@@ -6,8 +6,8 @@ CHAT_MODE = True  # Whether to run in chat mode
 
 # Hyperparameters
 CONTEXT_LEN = 128
-EMBED_DIM = 128
-NUM_LAYERS = 4
+EMBED_DIM = 256
+NUM_LAYERS = 6
 NUM_HEADS = 4
 BATCH_SIZE = 128
 DROPOUT = 0.1
