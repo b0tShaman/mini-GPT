@@ -10,6 +10,7 @@ Autoregressive text generation
 ![Demo](assets/demo.gif)
 
 Training took around 17 hours on NVIDIA GTX 1050 Ti (4GB RAM)
+
 ![Train](assets/train.JPG)
 
 | Loss Curve | Model Configuration |
