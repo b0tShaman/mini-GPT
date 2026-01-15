@@ -126,7 +126,7 @@ class TextProcessor:
                     # cast numpy type to int for tokenizer
                     decoded_str = self.tokenizer.decode([int(tid)])
                     writer.writerow([i, tid, f"'{decoded_str}'"])
-            print("   ✅ Preview saved.")
+            print("   ✅ Token Preview saved.")
         except Exception as e:
             print(f"   ⚠️ Could not save preview: {e}")
 
@@ -158,7 +158,7 @@ class TextProcessor:
                         writer.writerow(
                             [i, f"'{input_decoded}'", f"'{target_decoded}'"]
                         )
-            print("   ✅ Preview saved.")
+            print("   ✅ Sliding Window Preview saved.")
         except Exception as e:
             print(f"   ⚠️ Could not save preview: {e}")
 
