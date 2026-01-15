@@ -17,6 +17,12 @@ if __name__ == "__main__":
             text = input("📝 Enter start text (or 'q'): ")
             if text == "q":
                 break
+
+            if config.INSTRUCTION_SET:  
+                formatted_prompt = f"<user>: {text}\n<bot>:"
+            else :
+                formatted_prompt = text
+                
             generate_text_typewriter(
                 trained_model,
                 proc,
