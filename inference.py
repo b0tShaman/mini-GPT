@@ -101,9 +101,16 @@ def chat(
     K=config.TOP_K,
 ):
     model.eval()
+    
+    # helper to get IDs efficiently outside the loop
+    eos_id = processor.tokenizer.token_to_id("<eos>")
+
+    # 1. Prepare Prompt
+    # Ensure we handle the newline correctly depending on if history exists
     if history == "":
         current_prompt = f"<user>: {user_input}\n<bot>:"
     else:
+        # We assume history already ends with <eos>, so we just add the newline
         current_prompt = f"{history}\n<user>: {user_input}\n<bot>:"
 
     current_ids = processor.tokenizer.encode(current_prompt.lower()).ids
@@ -117,17 +124,24 @@ def chat(
             logits = model(cond_ids)
             next_token_logits = logits[:, -1, :]
 
+            # Sampling Logic
             scaled_logits = next_token_logits / temperature
             probs = torch.nn.functional.softmax(scaled_logits, dim=1)
-
             top_k_probs, top_k_indices = torch.topk(probs, K, dim=1)
             top_k_probs = top_k_probs / torch.sum(top_k_probs, dim=1, keepdim=True)
             next_token_index = torch.multinomial(top_k_probs, 1)
             next_id = top_k_indices.gather(1, next_token_index).item()
 
-            if next_id == processor.tokenizer.token_to_id("<eos>"):
+            # 2. Stop Check
+            if next_id == eos_id:
+                # Append the EOS to the tensor before breaking
+                # This ensures it exists in the history for the NEXT turn.
+                current_ids_tensor = torch.cat(
+                    [current_ids_tensor, torch.tensor([[next_id]], device=DEVICE)], dim=1
+                )
                 break
 
+            # 3. Print (Only print if NOT eos)
             word_chunk = processor.tokenizer.decode([next_id])
             print(word_chunk, end="", flush=True)
             time.sleep(0.02)
@@ -137,5 +151,9 @@ def chat(
             )
 
     print("\n")
+    
+    # 4. Return History
+    # It contains the <eos> at the end.
     updated_history = processor.tokenizer.decode(current_ids_tensor[0].tolist())
-    return updated_history.replace("<eos>", "")
+    
+    return updated_history

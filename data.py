@@ -58,17 +58,39 @@ class TextProcessor:
             config.CLEAN_FILE, "a", encoding="utf-8"
         ) as f_clean, open(config.BIN_FILE, "ab") as f_bin:
 
+            prev_speaker = None
             for line in f_in:
+                line = line.strip()
+
+                if not line:  # Skip empty lines
+                    continue
+    
+                # 1. Identify Speaker
+                curr_speaker = "bot" if line.startswith("<bot>:") else "user"
+
                 line_lower = line.lower()
-                if config.INSTRUCTION_SET:
-                    line_lower = line_lower.strip()
-                    if line_lower.startswith("<bot>:"):
-                        line_lower = line_lower + " <eos>"
-                    line_lower = line_lower + "\n"
+                
+                # 2. Process Line
+                if config.INSTRUCTION_SET and line_lower.startswith("<bot>:"):
+                    line_lower = line_lower + " <eos>"
+                
+                line_lower = line_lower + "\n"
+
+                # 3. Check for Collision (Bot->Bot or User->User)
+                if prev_speaker == curr_speaker:
+                    # Fix the Text File: Write a distinct separator line
+                    separator = "<eos>\n"
+                    f_clean.write(separator) 
+                    
+                    sep_ids = self.tokenizer.encode("<eos>").ids 
+                    batch_buffer.extend(sep_ids)
 
                 f_clean.write(line_lower)
                 encoded = self.tokenizer.encode(line_lower)
                 batch_buffer.extend(encoded.ids)
+
+                # 4. Update Tracker
+                prev_speaker = curr_speaker
 
                 if len(batch_buffer) >= BATCH_WRITE_SIZE:
                     np.array(batch_buffer, dtype=np.int64).tofile(f_bin)

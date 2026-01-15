@@ -65,9 +65,12 @@ venv\Scripts\activate
 You must install the specific CUDA-enabled version of PyTorch before other dependencies. Run this command:
 
 ```bash
+# On Windows
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-# Install Remaining Libraries
-pip install -r assets/requirements.txt
+```
+**Install Remaining Libraries:**
+```bash
+pip install -r assets/requirements.txt --isolated
 ```
 
 ## 🏃 Usage
