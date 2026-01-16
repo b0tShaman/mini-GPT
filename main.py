@@ -26,7 +26,7 @@ if __name__ == "__main__":
             generate_text_typewriter(
                 trained_model,
                 proc,
-                text,
+                formatted_prompt,
                 num_sentences=config.NUM_SENTENCES,
                 temperature=config.TEMPERATURE,
                 K=config.TOP_K,
