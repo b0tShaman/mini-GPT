@@ -54,49 +54,98 @@ class TextProcessor:
         batch_buffer = []
         BATCH_WRITE_SIZE = 10000
 
-        with open(filepath, "r", encoding="utf-8") as f_in, open(
-            config.CLEAN_FILE, "a", encoding="utf-8"
-        ) as f_clean, open(config.BIN_FILE, "ab") as f_bin:
+        # --- STATE VARIABLES ---
+        current_block_lines = []
+        # We track the speaker of the *current buffer* being built
+        current_buffer_speaker = None 
+        # We track the speaker of the *last flushed block* to detect collisions
+        last_flushed_speaker = None
 
-            prev_speaker = None
+        def flush_block(lines, speaker, f_clean):
+            nonlocal total_tokens, batch_buffer
+            if not lines:
+                return
+
+            # 1. Join lines: Preserves internal structure of the block
+            text_block = "\n".join(lines)
+            
+            # 2. Lowercase
+            text_block = text_block.lower()
+
+            # 3. Append <eos> if it is a BOT response
+            if config.INSTRUCTION_SET and speaker == "bot":
+                text_block = text_block + " <eos>"
+            
+            # 4. Add newline for file formatting
+            text_block += "\n"
+
+            f_clean.write(text_block)
+            encoded = self.tokenizer.encode(text_block)
+            batch_buffer.extend(encoded.ids)
+
+            if len(batch_buffer) >= BATCH_WRITE_SIZE:
+                np.array(batch_buffer, dtype=np.int64).tofile(f_bin)
+                total_tokens += len(batch_buffer)
+                batch_buffer.clear()
+
+        def handle_collision(f_clean):
+            nonlocal total_tokens, batch_buffer
+            # Write separator to file
+            separator = "<eos>\n"
+            f_clean.write(separator) 
+            
+            # Write separator token to buffer
+            sep_ids = self.tokenizer.encode("<eos>").ids 
+            batch_buffer.extend(sep_ids)
+
+        with open(filepath, "r", encoding="utf-8") as f_in, \
+             open(config.CLEAN_FILE, "a", encoding="utf-8") as f_clean, \
+             open(config.BIN_FILE, "ab") as f_bin:
+
             for line in f_in:
-                line = line.strip()
-
-                if not line:  # Skip empty lines
-                    continue
-    
-                # 1. Identify Speaker
-                curr_speaker = "bot" if line.startswith("<bot>:") else "user"
-
-                line_lower = line.lower()
+                # 1. Preserve indentation, remove only trailing newline
+                line_content = line.rstrip('\n')
                 
-                # 2. Process Line
-                if config.INSTRUCTION_SET and line_lower.startswith("<bot>:"):
-                    line_lower = line_lower + " <eos>"
-                
-                line_lower = line_lower + "\n"
+                # Temp variable for tag detection (ignores leading spaces for detection only)
+                stripped_check = line_content.strip()
 
-                # 3. Check for Collision (Bot->Bot or User->User)
-                if prev_speaker == curr_speaker:
-                    # Fix the Text File: Write a distinct separator line
-                    separator = "<eos>\n"
-                    f_clean.write(separator) 
+                is_user = stripped_check.startswith("<user>:")
+                is_bot = stripped_check.startswith("<bot>:")
+
+                if is_user or is_bot:
+                    # A. Flush the previous block (if exists)
+                    if current_block_lines:
+                        flush_block(current_block_lines, current_buffer_speaker, f_clean)
+                        # Update the 'history' tracker
+                        last_flushed_speaker = current_buffer_speaker
+                        current_block_lines = []
+
+                    # B. Identify New Speaker
+                    new_speaker = "bot" if is_bot else "user"
+
+                    # C. Check for Collision
+                    # If the last block we finished has the same speaker as this new block
+                    if last_flushed_speaker == new_speaker:
+                        handle_collision(f_clean)
+
+                    # D. Start new buffer
+                    current_buffer_speaker = new_speaker
+                    current_block_lines.append(line_content)
+
+                else:
+                    # Preserve Empty Lines Logic:
+                    # Only skip if we haven't started any block yet (header noise)
+                    if not current_block_lines and not stripped_check:
+                        continue
                     
-                    sep_ids = self.tokenizer.encode("<eos>").ids 
-                    batch_buffer.extend(sep_ids)
+                    # Otherwise append (this keeps empty lines inside the block)
+                    current_block_lines.append(line_content)
 
-                f_clean.write(line_lower)
-                encoded = self.tokenizer.encode(line_lower)
-                batch_buffer.extend(encoded.ids)
+            # End of file: Flush the final block
+            if current_block_lines:
+                flush_block(current_block_lines, current_buffer_speaker, f_clean)
 
-                # 4. Update Tracker
-                prev_speaker = curr_speaker
-
-                if len(batch_buffer) >= BATCH_WRITE_SIZE:
-                    np.array(batch_buffer, dtype=np.int64).tofile(f_bin)
-                    total_tokens += len(batch_buffer)
-                    batch_buffer = []
-
+            # Flush any remaining binary data
             if batch_buffer:
                 np.array(batch_buffer, dtype=np.int64).tofile(f_bin)
                 total_tokens += len(batch_buffer)
